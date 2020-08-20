@@ -1,0 +1,34 @@
+from database_set import *
+from data_quality import *
+from config import *
+
+def property(id, category, text):
+    address = find_address(text)
+    estimated_sum = find_estimated_sum(text)
+    starting_price = find_starting_price(text)
+    auction_date = find_auction_date(text)
+    link = website_link + str(id)
+    query = "INSERT INTO bailiff_auctions_fields (id,category,address,estimated_sum,starting_price,auction_date,link) VALUES ('" + str(id) + "','" + category + "','" + address + "','" + estimated_sum + "','" + starting_price + "','" + auction_date + "','" + link + "')"
+    insert_data(mycursor, query)
+
+
+mydb = connect_to_database()
+mycursor = mydb.cursor()
+drop_table(mycursor, 'DROP TABLE bailiff_auctions_fields')
+create_table(mycursor,
+             'CREATE TABLE IF NOT EXISTS bailiff_auctions_fields (id INT NOT NULL,category VARCHAR(255), address VARCHAR(255),estimated_sum VARCHAR(255),starting_price VARCHAR(255),auction_date VARCHAR(255),latitude VARCHAR(255),longitude VARCHAR(255),link VARCHAR(255),timestamp TIMESTAMP , PRIMARY KEY (id))')
+
+query = "SELECT * FROM bailiff_auctions_text where category in ('nieruchomości','mieszkania','domy','grunty','garaże, miejsca postojowe','lokale użytkowe','magazyny i hale')"
+mycursor.execute(query)
+result = mycursor.fetchall()
+for row in result:
+
+    id = row[0]
+    category = row[1]
+    print(str(id) + ' ' + category)
+    text = row[2]
+    property(id, category, text)
+    if row[0] % 100 == 0:
+        mydb.commit()
+
+mydb.close()
