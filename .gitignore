@@ -140,6 +140,6 @@ cython_debug/
 # My files
 config.py
 mydata.js
-
+bailif.htm
 # Idea files
 .idea/
