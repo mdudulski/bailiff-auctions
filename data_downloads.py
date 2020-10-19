@@ -5,7 +5,7 @@ from itertools import chain
 from config import *
 
 
-def get_data(id):
+def get_data(id, mycursor):
     try:
         source = requests.get(website_link + str(id) + '').text
         soup = BeautifulSoup(source, 'lxml')
@@ -27,32 +27,55 @@ def get_data(id):
         print('link empty')
 
 
-mydb = connect_to_database()
-mycursor = mydb.cursor()
+def initializedb():
+    mydb = connect_to_database()
+    mycursor = mydb.cursor()
 
-create_table(mycursor,
-             'CREATE TABLE IF NOT EXISTS bailiff_auctions_text (id INT NOT NULL,category VARCHAR(255), auction_text VARCHAR(20000) NOT NULL,timestamp TIMESTAMP , PRIMARY KEY (id))')
+    create_table(mycursor,
+                 'CREATE TABLE IF NOT EXISTS bailiff_auctions_text (id INT NOT NULL,category VARCHAR(255), auction_text VARCHAR(20000) NOT NULL,timestamp TIMESTAMP ,is_active tinyint(1) default 1, PRIMARY KEY (id))')
 
-start_id = 500181
+    return mycursor, mydb
 
-end_id = 500185
 
-query = "SELECT id FROM bailiff_auctions_text"
+def countstart(mycursor):
+    query = "SELECT MAX(id) FROM bailiff_auctions_text order by id desc"
+    mycursor.execute(query)
+    result = mycursor.fetchall()
+    return result[0][0] - 100
 
-mycursor.execute(query)
 
-result = mycursor.fetchall()
-mylist = list(chain.from_iterable(result))
-print(mylist)
 
-for id in range(start_id, end_id + 1):
-    print(id)
-    if id in mylist:
-        print('the record is already in the database (for)')
-    else:
-        get_data(id)
-        if id % 100 == 0:
-            mydb.commit()
 
-mydb.commit()
-mydb.close()
+
+
+
+def main():
+    mycursor, mydb = initializedb()
+
+    start_id = countstart(mycursor)
+    end_id = start_id + 5000
+    start_id = 517792
+    end_id = 517824
+    query = "SELECT id FROM bailiff_auctions_fields"
+
+    mycursor.execute(query)
+
+    result = mycursor.fetchall()
+    mylist = list(chain.from_iterable(result))
+    print(mylist)
+
+    for id in range(start_id, end_id + 1):
+        print(id)
+        if id in mylist:
+            print('the record is already in the database (for)')
+        else:
+            get_data(id, mycursor)
+            if id % 100 == 0:
+                mydb.commit()
+
+    mydb.commit()
+    mydb.close()
+
+
+if __name__ == "__main__":
+    main()

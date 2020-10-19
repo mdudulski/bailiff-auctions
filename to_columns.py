@@ -14,11 +14,11 @@ def property(id, category, text):
 
 mydb = connect_to_database()
 mycursor = mydb.cursor()
-drop_table(mycursor, 'DROP TABLE bailiff_auctions_fields')
 create_table(mycursor,
-             'CREATE TABLE IF NOT EXISTS bailiff_auctions_fields (id INT NOT NULL,category VARCHAR(255), address VARCHAR(255),estimated_sum VARCHAR(255),starting_price VARCHAR(255),auction_date VARCHAR(255),latitude VARCHAR(255),longitude VARCHAR(255),link VARCHAR(255),timestamp TIMESTAMP , PRIMARY KEY (id))')
+             'CREATE TABLE IF NOT EXISTS bailiff_auctions_fields (id INT NOT NULL,category VARCHAR(255), address VARCHAR(255),estimated_sum VARCHAR(255),starting_price VARCHAR(255),auction_date VARCHAR(255),latitude VARCHAR(255),longitude VARCHAR(255),link VARCHAR(255),timestamp TIMESTAMP ,is_active tinyint(1) default 1, PRIMARY KEY (id))')
 
-query = "SELECT * FROM bailiff_auctions_text where category in ('nieruchomości','mieszkania','domy','grunty','garaże, miejsca postojowe','lokale użytkowe','magazyny i hale')"
+query = "SELECT bat.* FROM bailiff_auctions_text as bat LEFT JOIN bailiff_auctions_fields as baf on bat.id=baf.id where bat.category in ('nieruchomości','mieszkania','domy','grunty','garaże, miejsca postojowe','lokale użytkowe','magazyny i hale') and baf.id is null order by bat.id asc"
+
 mycursor.execute(query)
 result = mycursor.fetchall()
 for row in result:
@@ -30,5 +30,5 @@ for row in result:
     property(id, category, text)
     if row[0] % 100 == 0:
         mydb.commit()
-
+mydb.commit()
 mydb.close()

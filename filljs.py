@@ -9,7 +9,7 @@ eqfeed_callback['properties'] = []
 mydb = connect_to_database()
 mycursor = mydb.cursor()
 
-query = "SELECT id,link,latitude,longitude FROM bailiff_auctions_fields where latitude !='brak'"
+query = "SELECT id,link,latitude,longitude,category,estimated_sum,auction_date FROM bailiff_auctions_fields where latitude !='brak' and is_active!=0"
 mycursor.execute(query)
 result = mycursor.fetchall()
 
@@ -20,11 +20,18 @@ for row in result:
     link = row[1]
     latitude = row[2]
     longitude = row[3]
+    category = row[4]
+    estimated_sum = row[5]
+    auction_date = row[6]
+
     eqfeed_callback['properties'].append({
         'id': id,
         'url': link,
         'lat': latitude,
-        'long': longitude
+        'long': longitude,
+        'category' : category,
+        'estimated_sum': estimated_sum,
+        'auction_date': auction_date
     })
 
 
