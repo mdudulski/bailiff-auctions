@@ -34,5 +34,3 @@ def checkifisactive(mycursor,mydb):
 
 
 
-mycursor, mydb = initializedb()
-checkifisactive(mycursor,mydb)

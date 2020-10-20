@@ -44,18 +44,11 @@ def countstart(mycursor):
     return result[0][0] - 100
 
 
-
-
-
-
-
-def main():
-    mycursor, mydb = initializedb()
+def downloaddata(mycursor, mydb):
 
     start_id = countstart(mycursor)
-    end_id = start_id + 5000
-    start_id = 517792
-    end_id = 517824
+    end_id = start_id + 200
+
     query = "SELECT id FROM bailiff_auctions_fields"
 
     mycursor.execute(query)
@@ -77,5 +70,4 @@ def main():
     mydb.close()
 
 
-if __name__ == "__main__":
-    main()
+
