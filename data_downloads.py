@@ -47,7 +47,7 @@ def countstart(mycursor):
 def downloaddata(mycursor, mydb):
 
     start_id = countstart(mycursor)
-    end_id = start_id + 200
+    end_id = start_id + 500
 
     query = "SELECT id FROM bailiff_auctions_fields"
 
@@ -63,11 +63,10 @@ def downloaddata(mycursor, mydb):
             print('the record is already in the database (for)')
         else:
             get_data(id, mycursor)
-            if id % 100 == 0:
-                mydb.commit()
+            mydb.commit()
 
     mydb.commit()
-    mydb.close()
+
 
 
 

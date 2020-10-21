@@ -41,4 +41,3 @@ def add_coordinates(mycursor,mydb):
         insert_data(mycursor, sql)
 
     mydb.commit()
-    mydb.close()
