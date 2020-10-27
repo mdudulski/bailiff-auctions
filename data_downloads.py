@@ -1,72 +1,64 @@
-from database_set import *
-from bs4 import BeautifulSoup
-import requests
 from itertools import chain
-from config import *
+import requests
+import mysql.connector
+from bs4 import BeautifulSoup
+from config import website_link, elements_to_crawl
+from database_set import insert_data, connect_to_database, create_table
+from sql_queries import insert_bailiff_auctions_text, create_bailiff_auctions_text, \
+    create_bailiff_auctions_fields, select_ids_from_text, select_max_id_from_fields
 
 
-def get_data(id, mycursor):
+def get_data(auction_id, mycursor):
     try:
-        source = requests.get(website_link + str(id) + '').text
+        source = requests.get(website_link + str(auction_id) + '').text
         soup = BeautifulSoup(source, 'lxml')
         text = soup.find('div', class_='schema-preview').text
         category = soup.find('div', class_='row').text
         category = category.replace('Kategoria', '')
-
-        query = "INSERT INTO bailiff_auctions_text (id,category, auction_text) VALUES ('" + str(
-            id) + "','" + category + "','" + text + "')"
-
+        query = insert_bailiff_auctions_text(auction_id, category, text)
         try:
             insert_data(mycursor, query)
 
-        except Exception as e:
-            print('the record is already in the database')
+        except mysql.connector.Error as err:
+            print("The record is already in database: {}".format(err))
 
 
-    except Exception as e:
-        print('link empty')
+
+    except AttributeError as err:
+        print(str(auction_id) + " Link is empty: {}".format(err))
 
 
 def initializedb():
     mydb = connect_to_database()
     mycursor = mydb.cursor()
-
-    create_table(mycursor,
-                 'CREATE TABLE IF NOT EXISTS bailiff_auctions_text (id INT NOT NULL,category VARCHAR(255), auction_text VARCHAR(20000) NOT NULL,timestamp TIMESTAMP ,is_active tinyint(1) default 1, PRIMARY KEY (id))')
+    create_table(mycursor, create_bailiff_auctions_text())
+    create_table(mycursor, create_bailiff_auctions_fields())
+    print('database is initialized')
 
     return mycursor, mydb
 
 
-def countstart(mycursor):
-    query = "SELECT MAX(id) FROM bailiff_auctions_text order by id desc"
+def get_start_id(mycursor):
+    # get start_id to website crawl
+    query = select_max_id_from_fields()
     mycursor.execute(query)
     result = mycursor.fetchall()
     return result[0][0] - 100
 
 
 def downloaddata(mycursor, mydb):
-
-    start_id = countstart(mycursor)
-    end_id = start_id + 500
-
-    query = "SELECT id FROM bailiff_auctions_fields"
-
+    start_id = get_start_id(mycursor)
+    end_id = start_id + elements_to_crawl
+    query = select_ids_from_text()
     mycursor.execute(query)
-
     result = mycursor.fetchall()
-    mylist = list(chain.from_iterable(result))
-    print(mylist)
+    id_list = list(chain.from_iterable(result))
 
-    for id in range(start_id, end_id + 1):
-        print(id)
-        if id in mylist:
+    for auction_id in range(start_id, end_id + 1):
+        if auction_id in id_list:
             print('the record is already in the database (for)')
         else:
-            get_data(id, mycursor)
+            get_data(auction_id, mycursor)
             mydb.commit()
 
-    mydb.commit()
-
-
-
-
+    print('text data are downloaded')
