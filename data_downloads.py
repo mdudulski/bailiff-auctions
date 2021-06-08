@@ -53,12 +53,14 @@ def downloaddata(mycursor, mydb):
     mycursor.execute(query)
     result = mycursor.fetchall()
     id_list = list(chain.from_iterable(result))
-
+    counter = 0
     for auction_id in range(start_id, end_id + 1):
         if auction_id in id_list:
-            print('the record is already in the database (for)')
+            print(str(auction_id) + 'the record is already in the database (for)')
         else:
             get_data(auction_id, mycursor)
-            mydb.commit()
+            if counter%50==0:
+                mydb.commit()
+        counter+=1
 
     print('text data are downloaded')
